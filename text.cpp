@@ -1,30 +1,39 @@
 #include "exchange.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <strings.h>
-#include <vector>
-#include <iostream>
-
-using namespace std;
 
 bool repeat(true);
 
-void	show_value_of_btc(t_values *values)
+class ledger
 {
-	printf("Current value of Bitcoin is at: %d\n", values->valuebtc);
-	//values->user_choice = 0;
+	vector <string>Transaction;
+	public:
+	void record(string s)
+	{
+		Transaction.push_back(s);
+	}
+	void print_ledger()
+	{
+		for (unsigned int i = 0; i < Transaction.size(); i++)
+		{
+			cout << Transaction.at(i);
+		}
+	}
+};
+ledger l;
+
+void show_value_of_btc(t_values *values)
+{
+	printf("Current value of Bitcoin is at: %lf\n", values->valuebtc);
 }
 
-void	show_balance(t_values *values)
+void show_balance(t_values *values)
 {
 	printf("Your Balance of BTC is: %lf\n", values->numberofbtc);
 	printf("Your Balance of USD is: %lf\n", values->cash_balance);
 }
 
-int	check_amount(t_values *values)
+int check_amount(t_values *values)
 {
-	if (values->user_choice == 3)
+	if (values->user_choice == 3 || values->user_choice == 2)
 	{
 		if (values->sellingbtc > values->numberofbtc)
 			return (1);
@@ -37,39 +46,23 @@ int	check_amount(t_values *values)
 		return (0);
 }
 
-class ledger
+class The_Date
 {
-	public :
-		vector <string> Transaction;
-		vector <float> Value;
-		string symbol = "BTC";
-		vector <string> Time;		
-		void record()
+	public:
+		string trans_time;
+		string Record_Time(t_values *values)
 		{
-			for (unsigned int i = 0; i < Transaction.size(); i++) 
-			{
-				cout << Time.at(i) << "   ";
-				cout << Transaction.at(i) << ' ';
-				cout << Value.at(i) << ' ';
-				cout << symbol << endl << endl;
-			}
+			time_t now = time(0);
+			trans_time = ctime(&now);
+			return (trans_time);
 		}
 };
+The_Date time_of_transaction;
 
-class	The_Date
-{
-	string trans_time;
-	void Record_Time ()
-	{
-		time_t now = time(0);
-		trans_time = ctime(&now);
-	}
-}
-
-class	wallet
+class wallet
 {
 	public: 
-		void	buy_bitcoin(t_values *values)
+		void buy_bitcoin(t_values *values)
 		{
 			double ogcashmoneys = 0;
 			printf("How many BTC's would you like to buy?\n");
@@ -79,17 +72,17 @@ class	wallet
 				printf("You do not have enough credits to complete transaction! Try again\n");
 			else
 			{
-				//ledger ledgerclass;
 				ogcashmoneys = values->cash_balance;
-				//ledgerclass.record();
+				string s = "You bought " + to_string(values->numberofbtc) + 
+					" of BTC on " + time_of_transaction.Record_Time(values);
+				l.record(s);
+				//purchase_time.Record_Time(values);
 				values->cash_balance = ogcashmoneys - values->final_cash_balance;
 
 			}
 			printf("Your current balance is: %lf dollars\n", values->cash_balance);
-			
-			//ledgerclass.record;
 		}
-		void	sell_bitcoin(t_values *values)
+		void sell_bitcoin(t_values *values)
 		{
 			printf("How many BTC's would you like to sell?\n");
 			scanf("%lf", &values->sellingbtc);
@@ -100,51 +93,37 @@ class	wallet
 			else
 			{
 				values->numberofbtc -= values->sellingbtc;
+				string s = "You sold " + to_string(values->sellingbtc) + 
+					" of BTC on " + time_of_transaction.Record_Time(values);
+				l.record(s);
 				values->final_cash_balance = values->sellingbtc * values->valuebtc;
 				values->cash_balance += values->final_cash_balance;
 			}
 			printf("%lf is the btc in your wallet\n", values->numberofbtc);
-			printf("%lf is you balance\n", values->cash_balance);
+			printf("%lf is your balance\n", values->cash_balance);
 		}
 
 };
 
-void	choice(t_values *values)
+void choice(t_values *values)
 {
-	ledger		show_purchase;
-	ledger		show_sell;
-	The_date	purchase_time;
-	The_date	sell_time;
+	wallet  walletclass;
 
 	if (values->user_choice == 1)
 		show_value_of_btc(values);
 	else if (values->user_choice == 2)
-	{	wallet walletclass;
-		//ledger ledgerclass;
 		walletclass.buy_bitcoin(values);
-		purchase_time.Record_time();
-		History_Purchase.Transaction.push_back("You bought ");
-		//ledgerclass.record();
-	}
 	else if (values->user_choice == 3)
-	{
-		wallet walletclass;
 		walletclass.sell_bitcoin(values);
-	}
 	else if (values->user_choice == 4)
 		show_balance(values);
-	/*
-	   else if (values->user_choice == 5)
-	   {
-	   ledger ledgerclass;
-	//ledger
-	}
-	 */
+	else if (values->user_choice == 5)
+		l.print_ledger();
 }
 
-int	main()
+int main()
 {
-	t_values	values;
+	t_values values;
 	bzero(&values, sizeof(t_values));
 	values.valuebtc = 10000;
 	values.numberofbtc = 0;
@@ -159,7 +138,11 @@ int	main()
 		printf("4: Show balance\n");
 		printf("5: Print history\n");
 		scanf("%d", &values.user_choice);
-		choice(&values);
+		if (values.user_choice >= 1 && values.user_choice<= 5)
+			choice(&values);
+		else
+			printf("Pick again that is not an option\n");
 	}
 	while (repeat == true);
 }
+
